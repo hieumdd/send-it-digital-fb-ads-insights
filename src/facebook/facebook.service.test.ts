@@ -3,7 +3,7 @@ import { ACCOUNTS, accountService } from './account.service';
 import { CAMPAIGN_INSIGHTS } from './pipeline.const';
 
 describe('Pipeline Service', () => {
-    it.each(Object.values(ACCOUNTS).flat())(
+    it.concurrent.each(Object.values(ACCOUNTS).flat())(
         'account %p',
         async (accountId) => {
             console.log(accountId);
@@ -14,11 +14,15 @@ describe('Pipeline Service', () => {
                     end: '2023-01-01',
                 },
                 CAMPAIGN_INSIGHTS,
-            ).then((res) => {
-                expect(res).toBeTruthy();
-            });
+            )
+                .then((res) => {
+                    expect(res).toBeTruthy();
+                })
+                .catch((err) => {
+                    console.error({ accountId });
+                });
         },
-        120_000,
+        60_000,
     );
 });
 
