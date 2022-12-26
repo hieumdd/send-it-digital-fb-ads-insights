@@ -54,5 +54,6 @@ jobs:
           --runtime=nodejs16
           --trigger-http
           --no-user-output-enabled
+          --allow-unauthenticated
           --service-account=${{ env.GCP_SA }}
           --env-vars-file=${{ env.ENV_FILE }}
