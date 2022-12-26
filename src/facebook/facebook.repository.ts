@@ -1,3 +1,5 @@
+import { setTimeout } from 'node:timers/promises';
+
 import axios from 'axios';
 import { Dayjs } from 'dayjs';
 
@@ -84,9 +86,18 @@ export const get = async (options: InsightsOptions & ReportOptions): Promise<Ins
             })
             .then((res) => res.data);
 
-        return data.async_percent_completion === 100 && data.async_status === 'Job Completed'
-            ? reportId
-            : pollReport(reportId);
+        if (data.async_percent_completion === 100 && data.async_status === 'Job Completed') {
+            return reportId;
+        }
+
+        if (data.async_status === 'Job Failed') {
+            console.log('Async Failed');
+            throw new Error();
+        }
+
+        await setTimeout(5_000);
+
+        return pollReport(reportId);
     };
 
     const getInsights = async (reportId: string): Promise<InsightsData> => {
@@ -111,9 +122,10 @@ export const get = async (options: InsightsOptions & ReportOptions): Promise<Ins
         .then(pollReport)
         .then(getInsights)
         .catch((err) => {
+            console.log('Facebook Error');
             if (axios.isAxiosError(err)) {
-                console.log('facebook error', JSON.stringify(err.response?.data));
+                console.log(JSON.stringify(err.response?.data));
             }
-            return [];
+            return Promise.reject(err);
         });
 };
