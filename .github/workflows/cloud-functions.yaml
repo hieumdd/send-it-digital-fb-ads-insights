@@ -7,11 +7,11 @@ on:
 concurrency: ${{ github.ref }}
 
 env:
-  PROJECT_ID: good-united
-  GCP_SA: etl-325@good-united.iam.gserviceaccount.com
+  PROJECT_ID: send-it-digital
+  GCP_SA: integration-1@send-it-digital.iam.gserviceaccount.com
 
-  FUNCTION_NAME: good-united-fb-ads-insights-${{ github.ref_name }}
-  PUBLIC_URL: https://us-central1-good-united.cloudfunctions.net/good-united-fb-ads-insights-${{ github.ref_name }}
+  FUNCTION_NAME: send-it-digital-fb-ads-insights-${{ github.ref_name }}
+  PUBLIC_URL: https://us-central1-send-it-digital.cloudfunctions.net/send-it-digital-fb-ads-insights-${{ github.ref_name }}
 
   ENV_FILE: env.yaml
 
@@ -42,8 +42,6 @@ jobs:
 
       - run: |
           echo "DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}" >> ${{ env.ENV_FILE }}
-          echo "API_KEY: ${{ secrets.API_KEY }}" >> ${{ env.ENV_FILE }}
-          echo "MONGO_URI: ${{ secrets.MONGO_URI }}" >> ${{ env.ENV_FILE }}
           echo "PUBLIC_URL: ${{ env.PUBLIC_URL }}" >> ${{ env.ENV_FILE }}
 
       - run: >-
