@@ -24,8 +24,6 @@ const addBatchedAt = ({ rows, schema }: AddBatchedAtOptions) => [
     [...schema, { name: '_batched_at', type: 'TIMESTAMP' }],
 ];
 
-export const delete_ = () => client.dataset(DATASET).table(`p_CampaignInsights`).delete()
-
 export const load = async (rows: Record<string, any>[], options: LoadOptions) => {
     const [_rows, fields] = addBatchedAt({ rows, schema: options.schema });
 
