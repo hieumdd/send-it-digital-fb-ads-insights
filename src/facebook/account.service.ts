@@ -1,5 +1,6 @@
 import { load } from '../bigquery/bigquery.service';
 import { createTasks } from '../task/cloud-tasks.service';
+import * as pipelines from './pipeline.const';
 
 export const ACCOUNTS = {
     JLGroup: [
@@ -38,14 +39,15 @@ export const accountService = () => {
 };
 
 export type TaskOptions = {
+    pipeline: keyof typeof pipelines;
     start?: string;
     end?: string;
 };
 
-export const taskService = ({ start, end }: TaskOptions) => {
+export const taskService = ({ pipeline, start, end }: TaskOptions) => {
     const data = Object.values(ACCOUNTS)
         .flat()
-        .map((accountId) => ({ accountId: String(accountId), start, end }));
+        .map((accountId) => ({ accountId: String(accountId), start, end, pipeline }));
 
     return createTasks(data, (task) => task.accountId);
 };

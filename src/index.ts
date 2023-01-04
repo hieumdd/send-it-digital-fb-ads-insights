@@ -28,7 +28,7 @@ app.use('/task', (req, res) => {
         end: Joi.string().optional(),
     })
         .validateAsync(req.body)
-        .then(({ start, end }) => taskService({ start, end }))
+        .then(taskService)
         .catch((err) => {
             console.error('err', err);
             res.status(500).json({ err });
