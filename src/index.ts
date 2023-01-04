@@ -21,6 +21,20 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use('/task', (req, res) => {
+    Joi.object<Omit<RunPipelineDto, 'accountId'>>({
+        pipeline: Joi.string(),
+        start: Joi.string().optional(),
+        end: Joi.string().optional(),
+    })
+        .validateAsync(req.body)
+        .then(({ start, end }) => taskService({ start, end }))
+        .catch((err) => {
+            console.error('err', err);
+            res.status(500).json({ err });
+        });
+});
+
 app.use('/', (req, res) => {
     Joi.object<RunPipelineDto>({
         pipeline: Joi.string(),
@@ -33,20 +47,6 @@ app.use('/', (req, res) => {
             pipelineService({ accountId, start, end }, pipelines[pipeline]),
         )
         .then((result) => res.status(200).json({ result }))
-        .catch((err) => {
-            console.error('err', err);
-            res.status(500).json({ err });
-        });
-});
-
-app.use('/task', (req, res) => {
-    Joi.object<Omit<RunPipelineDto, 'accountId'>>({
-        pipeline: Joi.string(),
-        start: Joi.string().optional(),
-        end: Joi.string().optional(),
-    })
-        .validateAsync(req.body)
-        .then(({ start, end }) => taskService({ start, end }))
         .catch((err) => {
             console.error('err', err);
             res.status(500).json({ err });
