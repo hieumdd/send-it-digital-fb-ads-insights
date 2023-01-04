@@ -56,18 +56,6 @@ export const get = async (options: InsightsOptions & ReportOptions): Promise<Ins
                     level: options.level,
                     fields: options.fields,
                     breakdowns: options.breakdowns,
-                    filter: [
-                        {
-                            field: 'ad.impressions',
-                            operator: 'GREATER_THAN',
-                            value: 0,
-                        },
-                        {
-                            field: 'campaign.name',
-                            operator: 'CONTAIN',
-                            value: `LEADS`,
-                        },
-                    ],
                     time_range: JSON.stringify({
                         since: options.start.format('YYYY-MM-DD'),
                         until: options.end.format('YYYY-MM-DD'),
