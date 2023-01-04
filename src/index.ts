@@ -15,6 +15,12 @@ type RunPipelineDto = {
     end?: string;
 };
 
+app.use((req, res, next) => {
+    console.log({ path: req.path });
+    console.log({ body: JSON.stringify(req.body) });
+    next();
+});
+
 app.use('/', (req, res) => {
     Joi.object<RunPipelineDto>({
         pipeline: Joi.string(),
