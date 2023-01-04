@@ -32,8 +32,6 @@ export const createTasks = async <P>(payloads: P[], nameFn: (p: P) => string) =>
 
     const requests = await Promise.all(tasks.map((r) => client.createTask(r)));
 
-    await client.close();
-
     const results = requests.map(([res]) => res.name);
 
     return results.length;
