@@ -1,5 +1,5 @@
 import { pipelineService } from './facebook.service';
-import { ACCOUNTS, accountService } from './account.service';
+import { ACCOUNTS, accountService, taskService } from './account.service';
 import { CAMPAIGN_INSIGHTS } from './pipeline.const';
 
 describe('Pipeline Service', () => {
@@ -28,4 +28,12 @@ describe('Pipeline Service', () => {
 
 it('Account Service', async () => {
     return accountService().then((rows) => expect(rows).toBeTruthy());
+});
+
+it('Task Service', async () => {
+    return taskService({
+        pipeline: 'CAMPAIGN_INSIGHTS',
+        start: '2022-01-01',
+        end: '2022-02-01',
+    }).then((num) => expect(num).toBeGreaterThan(0));
 });

@@ -2,6 +2,8 @@ import { CloudTasksClient, protos } from '@google-cloud/tasks';
 import HttpMethod = protos.google.cloud.tasks.v2.HttpMethod;
 import { v4 as uuidv4 } from 'uuid';
 
+const client = new CloudTasksClient();
+
 const PROJECT = 'send-it-digital';
 const LOCATION = 'us-central1';
 const QUEUE = 'fb-ads-insights';
@@ -9,7 +11,6 @@ const QUEUE = 'fb-ads-insights';
 const URL = process.env.PUBLIC_URL || '';
 
 export const createTasks = async <P>(payloads: P[], nameFn: (p: P) => string) => {
-    const client = new CloudTasksClient();
 
     const serviceAccountEmail = await client.auth
         .getCredentials()
