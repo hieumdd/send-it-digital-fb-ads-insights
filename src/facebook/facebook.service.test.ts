@@ -10,8 +10,8 @@ describe('Pipeline Service', () => {
             return pipelineService(
                 {
                     accountId: String(accountId),
-                    start: '2022-12-01',
-                    end: '2023-01-01',
+                    start: '2022-01-01',
+                    end: '2023-02-01',
                 },
                 CAMPAIGN_INSIGHTS,
             )
@@ -22,7 +22,7 @@ describe('Pipeline Service', () => {
                     console.error({ accountId });
                 });
         },
-        60_000,
+        540_000,
     );
 });
 
