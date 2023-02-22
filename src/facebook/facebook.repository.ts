@@ -79,8 +79,7 @@ export const get = async (options: InsightsOptions & ReportOptions): Promise<Ins
         }
 
         if (data.async_status === 'Job Failed') {
-            console.log('Async Failed');
-            throw new Error();
+            throw new Error(JSON.stringify(data));
         }
 
         await setTimeout(5_000);
@@ -110,9 +109,10 @@ export const get = async (options: InsightsOptions & ReportOptions): Promise<Ins
         .then(pollReport)
         .then(getInsights)
         .catch((err) => {
-            console.log('Facebook Error');
             if (axios.isAxiosError(err)) {
                 console.log(JSON.stringify(err.response?.data));
+            } else {
+                console.log(err);
             }
             return Promise.reject(err);
         });

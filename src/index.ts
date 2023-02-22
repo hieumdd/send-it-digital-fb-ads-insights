@@ -15,9 +15,9 @@ type RunPipelineDto = {
     end?: string;
 };
 
-app.use((req, res, next) => {
-    console.log({ path: req.path });
-    console.log({ body: JSON.stringify(req.body) });
+app.use(({ path, body }, res, next) => {
+    const log = { path, body };
+    console.log(JSON.stringify(log));
     next();
 });
 
