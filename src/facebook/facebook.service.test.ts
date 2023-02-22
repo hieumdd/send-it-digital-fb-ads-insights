@@ -1,6 +1,6 @@
 import { pipelineService } from './facebook.service';
 import { ACCOUNTS, accountService, taskService } from './account.service';
-import { CAMPAIGN_INSIGHTS } from './pipeline.const';
+import { CAMPAIGN_INSIGHTS, CAMPAIGN_HOURLY_INSIGHTS } from './pipeline.const';
 
 describe('Pipeline Service', () => {
     it.concurrent.each(Object.values(ACCOUNTS).flat())(
@@ -10,10 +10,10 @@ describe('Pipeline Service', () => {
             return pipelineService(
                 {
                     accountId: String(accountId),
-                    start: '2022-01-01',
-                    end: '2023-02-01',
+                    start: '2022-02-01',
+                    end: '2023-02-07',
                 },
-                CAMPAIGN_INSIGHTS,
+                CAMPAIGN_HOURLY_INSIGHTS,
             )
                 .then((res) => {
                     expect(res).toBeTruthy();
@@ -32,8 +32,8 @@ it('Account Service', async () => {
 
 it('Task Service', async () => {
     return taskService({
-        pipeline: 'CAMPAIGN_INSIGHTS',
-        start: '2022-01-01',
-        end: '2022-02-01',
+        pipeline: 'CAMPAIGN_HOURLY_INSIGHTS',
+        start: '2022-02-01',
+        end: '2022-02-07',
     }).then((num) => expect(num).toBeGreaterThan(0));
 });
