@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
 
 import ndjson from 'ndjson';
-import { BigQuery } from '@google-cloud/bigquery';
+import { BigQuery, TableSchema } from '@google-cloud/bigquery';
 import dayjs from 'dayjs';
 
 type AddBatchedAtOptions = {
@@ -28,7 +28,7 @@ export const load = async (rows: Record<string, any>[], options: LoadOptions) =>
     const [_rows, fields] = addBatchedAt({ rows, schema: options.schema });
 
     const tableWriteStream = client.dataset(DATASET).table(`p_${options.table}`).createWriteStream({
-        schema: { fields },
+        schema: { fields } as TableSchema,
         sourceFormat: 'NEWLINE_DELIMITED_JSON',
         createDisposition: 'CREATE_IF_NEEDED',
         writeDisposition: 'WRITE_APPEND',
