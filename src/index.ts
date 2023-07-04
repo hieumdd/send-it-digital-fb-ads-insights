@@ -1,19 +1,15 @@
-import Joi from 'joi';
-import { http } from '@google-cloud/functions-framework';
 import express from 'express';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import { http } from '@google-cloud/functions-framework';
+import Joi from 'joi';
 
 import * as pipelines from './facebook/pipeline.const';
-import { pipelineService } from './facebook/facebook.service';
-import { taskService } from './facebook/account.service';
+import { runPipeline, createPipelineTasks } from './facebook/pipeline.service';
+
+dayjs.extend(utc);
 
 const app = express();
-
-type RunPipelineDto = {
-    pipeline: keyof typeof pipelines;
-    accountId: string;
-    start?: string;
-    end?: string;
-};
 
 app.use(({ path, body }, res, next) => {
     const log = { path, body };
@@ -21,39 +17,70 @@ app.use(({ path, body }, res, next) => {
     next();
 });
 
+type CreatePipelineTasksBody = {
+    start: string;
+    end: string;
+};
+
 app.use('/task', (req, res) => {
-    Joi.object<Omit<RunPipelineDto, 'accountId'>>({
-        pipeline: Joi.string(),
-        start: Joi.string().optional(),
-        end: Joi.string().optional(),
+    Joi.object<CreatePipelineTasksBody>({
+        start: Joi.string()
+            .optional()
+            .empty(null)
+            .allow(null)
+            .default(dayjs.utc().subtract(7, 'day').format('YYYY-MM-DD')),
+        end: Joi.string()
+            .optional()
+            .empty(null)
+            .allow(null)
+            .default(dayjs.utc().format('YYYY-MM-DD')),
     })
         .validateAsync(req.body)
         .then((body) =>
-            taskService(body).then((result) => {
-                res.status(200).json({ result });
-            }),
+            createPipelineTasks(body)
+                .then((result) => {
+                    res.status(200).json({ result });
+                })
+                .catch((error) => {
+                    console.error(JSON.stringify(error));
+                    res.status(500).json({ error });
+                }),
         )
-        .catch((err) => {
-            console.error('err', err);
-            res.status(500).json({ err });
+        .catch((error) => {
+            console.error(JSON.stringify(error));
+            res.status(500).json({ error });
         });
 });
 
+type RunPipelineBody = {
+    accountId: string;
+    start: string;
+    end: string;
+    pipeline: keyof typeof pipelines;
+};
+
 app.use('/', (req, res) => {
-    Joi.object<RunPipelineDto>({
-        pipeline: Joi.string(),
+    Joi.object<RunPipelineBody>({
         accountId: Joi.string(),
-        start: Joi.string().optional(),
-        end: Joi.string().optional(),
+        start: Joi.string(),
+        end: Joi.string(),
+        pipeline: Joi.string(),
     })
         .validateAsync(req.body)
-        .then(({ pipeline, accountId, start, end }) =>
-            pipelineService({ accountId, start, end }, pipelines[pipeline]),
-        )
-        .then((result) => res.status(200).json({ result }))
-        .catch((err) => {
-            console.error('err', err);
-            res.status(500).json({ err });
+        .then(async ({ pipeline, accountId, start, end }) => {
+            return runPipeline({ accountId, start, end }, pipelines[pipeline])
+                .then((result) => {
+                    res.status(200).json({ result });
+                })
+                .catch((error) => {
+                    console.error(JSON.stringify(error));
+                    res.status(500).json({ error });
+                });
+        })
+
+        .catch((error) => {
+            console.error(JSON.stringify(error));
+            res.status(500).json({ error });
         });
 });
 

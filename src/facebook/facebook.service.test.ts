@@ -1,40 +1,31 @@
-import { pipelineService } from './facebook.service';
-import { ACCOUNTS, accountService, taskService } from './account.service';
-import {
-    ACCOUNT_HOURLY_INSIGHTS,
-    CAMPAIGN_INSIGHTS,
-    CAMPAIGN_HOURLY_INSIGHTS,
-} from './pipeline.const';
+import { CAMPAIGN_INSIGHTS } from './pipeline.const';
+import { createPipelineTasks, runPipeline } from './pipeline.service';
 
-describe('Pipeline Service', () => {
-    it.concurrent.each(Object.values(ACCOUNTS).flat())(
-        'account %p',
-        async (accountId) => {
-            console.log(accountId);
-            return pipelineService(
-                {
-                    accountId: String(accountId),
-                    start: '2023-02-22',
-                    end: '2023-03-01',
-                },
-                CAMPAIGN_HOURLY_INSIGHTS,
-            ).catch((err) => {
-                console.error({ err, accountId });
-                return Promise.reject(err);
-            });
+it('pipeline', async () => {
+    return runPipeline(
+        {
+            accountId: '2304291883206771',
+            start: '2023-04-01',
+            end: '2023-05-01',
         },
-        540_000,
-    );
+        CAMPAIGN_INSIGHTS,
+    )
+        .then((results) => expect(results).toBeDefined())
+        .catch((error) => {
+            console.error({ error });
+            return Promise.reject(error);
+        });
 });
 
-it('Account Service', async () => {
-    return accountService().then((rows) => expect(rows).toBeTruthy());
+it('create-tasks', async () => {
+    return createPipelineTasks({
+        start: '2023-05-01',
+        end: '2023-06-01',
+    })
+        .then((result) => expect(result).toBeDefined())
+        .catch((error) => {
+            console.error({ error });
+            return Promise.reject(error);
+        });
 });
 
-it('Task Service', async () => {
-    return taskService({
-        pipeline: 'CAMPAIGN_HOURLY_INSIGHTS',
-        start: '2022-02-01',
-        end: '2022-02-07',
-    }).then((num) => expect(num).toBeGreaterThan(0));
-});
