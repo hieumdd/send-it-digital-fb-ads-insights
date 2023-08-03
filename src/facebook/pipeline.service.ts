@@ -48,6 +48,7 @@ export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksOpt
         MuscleCarJones: '254828986334614',
         HGPS1: '939019287079336',
         SendItDigital: '402052360914388',
+        SendItDigital2: '211142348565945',
     };
 
     return Promise.all(Object.values(businesses).map((businessId) => getAccounts(businessId)))
