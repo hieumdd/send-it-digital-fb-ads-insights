@@ -1,30 +1,36 @@
 import { Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import Joi from 'joi';
 import ndjson from 'ndjson';
 
-import { createLoadStream } from '../bigquery/bigquery.service';
-import { createTasks } from '../task/cloud-tasks.service';
-import { getAccounts } from './account.service';
-import { ReportOptions, get } from './insights.service';
+import dayjs from '../dayjs';
+import { logger } from '../logging.service';
+import { createLoadStream } from '../bigquery.service';
+import { createTasks } from '../cloud-tasks.service';
+import { getAccounts } from '../facebook/account.service';
+import { ReportOptions, get } from '../facebook/insights.service';
 import * as pipelines from './pipeline.const';
 
-dayjs.extend(utc);
-
 export const runPipeline = async (reportOptions: ReportOptions, pipeline_: pipelines.Pipeline) => {
+    logger.info({ action: 'start', pipeline: pipeline_.name });
+
     const stream = await get(reportOptions, pipeline_.insightsConfig);
 
-    await pipeline(
+    return pipeline(
         stream,
         new Transform({
             objectMode: true,
             transform: (row, _, callback) => {
-                callback(null, {
-                    ...Joi.attempt(row, pipeline_.validationSchema),
-                    _batched_at: dayjs().toISOString(),
+                const { value, error } = pipeline_.validationSchema.validate(row, {
+                    stripUnknown: true,
+                    abortEarly: false,
                 });
+
+                if (error) {
+                    callback(error);
+                    return;
+                }
+
+                callback(null, { ...value, _batched_at: dayjs().utc().toISOString() });
             },
         }),
         ndjson.stringify(),
@@ -32,9 +38,10 @@ export const runPipeline = async (reportOptions: ReportOptions, pipeline_: pipel
             table: `p_${pipeline_.name}__${reportOptions.accountId}`,
             schema: [...pipeline_.schema, { name: '_batched_at', type: 'TIMESTAMP' }],
         }),
-    );
-
-    return true;
+    ).then(() => {
+        logger.info({ action: 'done', pipeline: pipeline_.name });
+        return true;
+    });
 };
 
 export type CreatePipelineTasksOptions = {

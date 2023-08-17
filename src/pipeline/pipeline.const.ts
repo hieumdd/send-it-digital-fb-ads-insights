@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-import { InsightsConfig } from './insights.service';
+import { InsightsConfig } from '../facebook/insights.service';
 
 export type Pipeline = {
     name: string;

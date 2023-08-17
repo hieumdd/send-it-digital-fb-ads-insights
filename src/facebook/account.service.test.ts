@@ -1,7 +1,7 @@
 import { getAccounts } from './account.service';
 
 it('get-accounts', async () => {
-    return getAccounts('402052360914388')
+    return getAccounts('211142348565945')
         .then((result) => {
             expect(result).toBeDefined();
         })
