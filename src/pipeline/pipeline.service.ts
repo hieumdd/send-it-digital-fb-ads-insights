@@ -1,4 +1,4 @@
-import { Transform } from 'node:stream';
+import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import ndjson from 'ndjson';
 
@@ -37,6 +37,7 @@ export const runPipeline = async (reportOptions: ReportOptions, pipeline_: pipel
         createLoadStream({
             table: `p_${pipeline_.name}__${reportOptions.accountId}`,
             schema: [...pipeline_.schema, { name: '_batched_at', type: 'TIMESTAMP' }],
+            writeDisposition: 'WRITE_APPEND',
         }),
     ).then(() => {
         logger.info({ action: 'done', pipeline: pipeline_.name });
@@ -58,12 +59,28 @@ export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksOpt
         SendItDigital2: '211142348565945',
     };
 
-    return Promise.all(Object.values(businesses).map((businessId) => getAccounts(businessId)))
-        .then((results) => results.flat())
-        .then((accounts) => {
-            return Object.keys(pipelines).flatMap((pipeline) => {
-                return accounts.map((accountId) => ({ accountId, start, end, pipeline }));
-            });
-        })
-        .then((data) => createTasks(data, (task) => [task.pipeline, task.accountId].join('-')));
+    const accounts = await Promise.all(
+        Object.values(businesses).map((businessId) => getAccounts(businessId)),
+    ).then((accounts) => accounts.flat());
+
+    return Promise.all([
+        createTasks(
+            Object.keys(pipelines).flatMap((pipeline) => {
+                return accounts.map((account) => ({ accountId: account.account_id, start, end, pipeline }));
+            }),
+            (task) => [task.pipeline, task.accountId].join('-'),
+        ),
+        pipeline(
+            Readable.from(accounts),
+            ndjson.stringify(),
+            createLoadStream({
+                table: `Accounts`,
+                schema: [
+                    { name: 'account_name', type: 'STRING' },
+                    { name: 'account_id', type: 'INT64' },
+                ],
+                writeDisposition: 'WRITE_TRUNCATE',
+            }),
+        ),
+    ]).then(() => true);
 };

@@ -1,5 +1,4 @@
-import express, { Handler } from 'express';
-import { Schema } from 'joi';
+import express from 'express';
 import { http } from '@google-cloud/functions-framework';
 
 import { logger } from './logging.service';
@@ -17,22 +16,16 @@ app.use(({ path, body }, _, next) => {
     next();
 });
 
-const validationMiddleware = (schema: Schema): Handler => {
-    return ({ body }, res, next) => {
-        const { error } = schema.validate(body);
+app.use('/task', ({ body }, res) => {
+    const { value, error } = CreatePipelineTasksBodySchema.validate(body);
 
-        if (error) {
-            logger.warn(error);
-            res.status(400).json({ error });
-            return;
-        }
+    if (error) {
+        logger.warn(error);
+        res.status(400).json({ error });
+        return;
+    }
 
-        next();
-    };
-};
-
-app.use('/task', validationMiddleware(CreatePipelineTasksBodySchema), ({ body }, res) => {
-    createPipelineTasks(body)
+    createPipelineTasks(value)
         .then((result) => {
             res.status(200).json({ result });
         })
@@ -42,10 +35,18 @@ app.use('/task', validationMiddleware(CreatePipelineTasksBodySchema), ({ body },
         });
 });
 
-app.use('/', validationMiddleware(RunPipelineBodySchema), ({ body }, res) => {
+app.use('/', ({ body }, res) => {
+    const { value, error } = RunPipelineBodySchema.validate(body);
+
+    if (error) {
+        logger.warn(error);
+        res.status(400).json({ error });
+        return;
+    }
+
     runPipeline(
-        { accountId: body.accountId, start: body.start, end: body.end },
-        pipelines[body.pipeline as keyof typeof pipelines],
+        { accountId: value.accountId, start: value.start, end: value.end },
+        pipelines[value.pipeline],
     )
         .then((result) => {
             res.status(200).json({ result });
