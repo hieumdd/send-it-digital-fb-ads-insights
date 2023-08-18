@@ -64,12 +64,12 @@ export const createPipelineTasks = async ({ start, end }: CreatePipelineTasksOpt
     ).then((accounts) => accounts.flat());
 
     return Promise.all([
-        // createTasks(
-        //     Object.keys(pipelines).flatMap((pipeline) => {
-        //         return accounts.map((account) => ({ accountId: account.account_id, start, end, pipeline }));
-        //     }),
-        //     (task) => [task.pipeline, task.accountId].join('-'),
-        // ),
+        createTasks(
+            Object.keys(pipelines).flatMap((pipeline) => {
+                return accounts.map((account) => ({ accountId: account.account_id, start, end, pipeline }));
+            }),
+            (task) => [task.pipeline, task.accountId].join('-'),
+        ),
         pipeline(
             Readable.from(accounts),
             ndjson.stringify(),
